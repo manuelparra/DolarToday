@@ -10,8 +10,9 @@
 
 # import the header files
 from datetime import date
-from urllib.request import Request, urlopen
 from sys import exit
+from urllib.request import Request, urlopen
+import urllib.error
 import ssl
 import json
 import sqlite3
@@ -47,6 +48,7 @@ tc = nettest.chargetest([firsthost, secondhost])
 if not tc.isnetup():
     print("Your Internet connection is down!. We can't continue")
     exit()
+print('Your Internet connection is ok!')
 
 # ignorate SSL certificate
 ctx = ssl.create_default_context()
@@ -54,15 +56,22 @@ ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
 # get the json data
-url = "https://s3.amazonaws.com/dolartoday/data.json"
+url = "https://s3.amazonaws.com/dolartoday/data.json?"
 print("Retrieving data from", url)
 
 try:
     html = urlopen(Request(url, headers={'User-Agent': 'Mazilla/5.0'}),
                    context=ctx).read().decode('utf-8')
-except:
-    print("Error to get the URL! That web isn't avalibled")
+except (urllib.error.HTTPError, urllib.error.URLError) as e:
+    print("Error to get the URL! That web isn't avalibled.")
     exit()
+except:
+    try:
+        html = urlopen(Request(url, headers={'User-Agent': 'Mazilla/5.0'}),
+                       context=ctx).read().decode('ISO-8859-1')
+    except:
+        print("Error to get read or decode the data!.")
+        exit()
 
 # if don't get any error, we have data retrieved in html object
 print("Retrieved", len(html), "characters")

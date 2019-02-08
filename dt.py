@@ -122,8 +122,20 @@ cur.executemany('''
 ''', dolartoday)
 
 conn.commit()
-cur.close()
 
+print("\nQuery actual:")
 print(labels[0][0], dolartoday[0][1])
 print(labels[1][0], dolartoday[1][1])
-print("Finish!")
+print("Finish!\n")
+
+cur.execute("""
+    SELECT Label.label, Historical.value, Historical.rdate
+    FROM Label JOIN Historical
+    ON Label.id = Historical.id_label
+    ORDER BY Historical.rdate ASC, Label.id ASC
+""")
+
+for row in cur:
+    print(row[0], row[1], row[2])
+
+cur.close()
